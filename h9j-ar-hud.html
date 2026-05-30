@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>H9J · Navegação AR</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@100;200;300;400&family=Barlow+Condensed:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--cyan:#00d4ff;--green:#4ade80;--red:#ff4466}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Barlow',sans-serif;-webkit-font-smoothing:antialiased}
+
+/* ── CÂMERA REAL ── */
+#camera-video {
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:0;
+  filter:brightness(0.72) saturate(0.75);
+}
+
+/* Fallback se câmera não disponível */
+#camera-fallback {
+  position:fixed;
+  inset:0;
+  z-index:0;
+  background: linear-gradient(160deg,#0d1018 0%,#141b24 50%,#0a0e14 100%);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:12px;
+}
+#camera-fallback p {
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:300;
+  font-size:13px;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.35);
+  text-align:center;
+  padding:0 32px;
+}
+#camera-fallback .fb-icon { font-size:36px; opacity:.4; }
+
+/* Grain */
+#grain{position:fixed;inset:0;z-index:2;opacity:.028;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:120px;animation:gr .12s steps(1) infinite}
+@keyframes gr{0%{background-position:0 0}25%{background-position:-20px 8px}50%{background-position:10px -15px}75%{background-position:-6px 20px}}
+
+/* Scanlines */
+#scanlines{position:fixed;inset:0;z-index:2;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.045) 3px,rgba(0,0,0,.045) 4px)}
+
+/* Vinheta */
+#vignette{position:fixed;inset:0;z-index:3;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 45%,transparent 35%,rgba(0,0,0,.65) 100%)}
+
+/* ── HUD ── */
+#hud{position:fixed;inset:0;z-index:10;pointer-events:none}
+
+/* Barra progresso */
+.prog-bar{position:absolute;top:0;left:0;right:0;height:2px;background:rgba(255,255,255,.06)}
+.prog-fill{height:100%;background:linear-gradient(90deg,#00aacc,var(--cyan));box-shadow:0 0 8px var(--cyan);transition:width .8s cubic-bezier(.4,0,.2,1)}
+
+/* Topo */
+.hud-top{position:absolute;top:0;left:0;right:0;
+  padding:max(env(safe-area-inset-top),16px) 18px 0;
+  display:flex;align-items:center;justify-content:space-between}
+.hud-logo{font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:12px;letter-spacing:.4em;text-transform:uppercase;color:rgba(255,255,255,.38)}
+.hud-logo b{color:var(--cyan);font-weight:400}
+.hud-wifi{display:flex;align-items:center;gap:6px;font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.32)}
+.wifi-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Chip destino */
+.hud-dest{position:absolute;top:max(env(safe-area-inset-top),14px);left:0;right:0;
+  display:flex;justify-content:center;padding-top:36px}
+.dest-chip{display:flex;align-items:center;gap:8px;
+  background:rgba(0,0,0,.52);border:1px solid rgba(0,212,255,.22);
+  border-radius:30px;padding:7px 16px 7px 11px;backdrop-filter:blur(12px)}
+.dest-dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);flex-shrink:0}
+.dest-txt{font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.8)}
+
+/* ── SETA AR ── */
+.ar-wrap{position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-64%);
+  display:flex;flex-direction:column;align-items:center;
+  animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translate(-50%,-64%) translateY(0)}50%{transform:translate(-50%,-64%) translateY(-10px)}}
+.ar-svg{filter:drop-shadow(0 0 16px var(--cyan)) drop-shadow(0 0 38px rgba(0,212,255,.35));animation:ap 2.2s ease-in-out infinite;transition:transform .85s cubic-bezier(.4,0,.2,1)}
+@keyframes ap{0%,100%{opacity:1}50%{opacity:.68}}
+.ar-stem{width:2px;height:48px;background:linear-gradient(180deg,var(--cyan),transparent);margin-top:-1px;opacity:.5}
+.ar-dot{width:9px;height:9px;border-radius:50%;background:var(--cyan);box-shadow:0 0 14px var(--cyan),0 0 28px rgba(0,212,255,.4);margin-top:-3px;animation:dp 1.6s ease-in-out infinite}
+@keyframes dp{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.6);opacity:.42}}
+
+/* Ring de chão */
+.ar-ring{position:absolute;bottom:28%;left:50%;transform:translateX(-50%);
+  width:100px;height:24px;border:1px solid rgba(0,212,255,.26);border-radius:50%;
+  box-shadow:0 0 14px rgba(0,212,255,.1);animation:rp 2s ease-in-out infinite}
+@keyframes rp{0%,100%{transform:translateX(-50%) scaleX(.78);opacity:.18}50%{transform:translateX(-50%) scaleX(1.1);opacity:.46}}
+
+/* Distância */
+.ar-dist{position:absolute;top:21%;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none}
+.dist-big{font-family:'Barlow Condensed',sans-serif;font-weight:200;
+  font-size:clamp(50px,13vw,82px);letter-spacing:.04em;color:#fff;line-height:1;
+  text-shadow:0 0 40px rgba(0,212,255,.55)}
+.dist-unit{font-size:.3em;font-weight:300;opacity:.42;letter-spacing:.22em;text-transform:uppercase}
+.dist-dir{font-family:'Barlow Condensed',sans-serif;font-weight:300;
+  font-size:clamp(13px,3.5vw,17px);letter-spacing:.26em;text-transform:uppercase;
+  color:var(--cyan);margin-top:5px;opacity:.88}
+
+/* Painéis laterais */
+.panel-l{position:absolute;left:0;top:50%;transform:translateY(-50%);padding:0 0 0 15px;max-width:148px}
+.p-label{font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:10px;letter-spacing:.32em;text-transform:uppercase;color:var(--cyan);margin-bottom:5px;opacity:.7}
+.p-bignum{font-family:'Barlow Condensed',sans-serif;font-weight:200;font-size:38px;line-height:1;color:rgba(255,255,255,.1);letter-spacing:-.02em;margin-bottom:-3px}
+.p-txt{font-family:'Barlow',sans-serif;font-weight:300;font-size:11.5px;line-height:1.55;color:rgba(255,255,255,.58)}
+.panel-r{position:absolute;right:0;top:50%;transform:translateY(-50%);padding:0 15px 0 0;max-width:148px;text-align:right}
+.p-nlabel{font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:4px}
+.p-nico{font-size:20px;display:block;margin-bottom:3px;opacity:.36}
+.p-ntxt{font-family:'Barlow',sans-serif;font-weight:300;font-size:11.5px;line-height:1.5;color:rgba(255,255,255,.24)}
+
+/* Rodapé */
+.hud-bottom{position:absolute;bottom:0;left:0;right:0;
+  padding-bottom:max(env(safe-area-inset-bottom),24px);
+  display:flex;flex-direction:column;align-items:center;gap:11px;pointer-events:all}
+.divider{width:100%;display:flex;align-items:center;opacity:.12}
+.div-line{flex:1;height:1px;background:#fff}
+.div-dot{width:4px;height:4px;border-radius:50%;background:#fff;flex-shrink:0}
+.hud-instr{font-family:'Barlow Condensed',sans-serif;font-weight:300;
+  font-size:clamp(15px,4.2vw,21px);letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(255,255,255,.88);text-align:center;padding:0 20px;
+  text-shadow:0 0 20px rgba(0,212,255,.3)}
+.hud-detail{font-family:'Barlow',sans-serif;font-weight:200;font-size:11px;
+  letter-spacing:.17em;text-transform:uppercase;color:rgba(255,255,255,.26);
+  text-align:center;padding:0 28px;margin-top:-5px}
+.btn-row{display:flex;gap:10px;padding:0 18px;width:100%}
+.btn-next{flex:1;background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.3);
+  border-radius:4px;padding:16px 18px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:14px;
+  letter-spacing:.28em;text-transform:uppercase;color:var(--cyan);
+  cursor:pointer;text-align:center;transition:background .2s;backdrop-filter:blur(8px)}
+.btn-next:active{background:rgba(0,212,255,.15)}
+.btn-next.chegada{color:var(--green);border-color:rgba(74,222,128,.32);background:rgba(74,222,128,.06)}
+.btn-emerg{background:rgba(255,68,102,.09);border:1px solid rgba(255,68,102,.24);
+  border-radius:4px;padding:16px 13px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:13px;
+  letter-spacing:.1em;text-transform:uppercase;color:rgba(255,120,140,.6);
+  cursor:pointer;backdrop-filter:blur(8px)}
+
+/* Flash */
+.flash{position:fixed;inset:0;background:rgba(0,212,255,.06);z-index:40;pointer-events:none;opacity:0;transition:opacity .12s}
+.flash.on{opacity:1}
+
+/* ── INTRO ── */
+#screen-intro{position:fixed;inset:0;z-index:50;background:#05070a;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .55s}
+.i-logo{font-family:'Barlow Condensed',sans-serif;font-weight:200;font-size:11px;
+  letter-spacing:.45em;text-transform:uppercase;color:rgba(255,255,255,.26);margin-bottom:26px}
+.i-logo b{color:var(--cyan);font-weight:300}
+.i-line{width:1px;height:42px;background:linear-gradient(180deg,transparent,rgba(0,212,255,.36),transparent);margin-bottom:18px}
+.i-title{font-family:'Barlow Condensed',sans-serif;font-weight:200;
+  font-size:clamp(32px,8vw,52px);letter-spacing:.08em;text-transform:uppercase;
+  color:#fff;text-align:center;line-height:1.1;margin-bottom:8px}
+.i-sub{font-family:'Barlow',sans-serif;font-weight:100;font-size:12px;letter-spacing:.22em;
+  text-transform:uppercase;color:rgba(255,255,255,.22);text-align:center;margin-bottom:44px}
+.i-input{width:100%;max-width:310px;background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:16px 17px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:16px;
+  letter-spacing:.15em;color:#fff;outline:none;text-transform:uppercase;
+  transition:border-color .2s;margin-bottom:13px;display:block}
+.i-input:focus{border-color:rgba(0,212,255,.36)}
+.i-input::placeholder{color:rgba(255,255,255,.16);letter-spacing:.2em}
+.i-quick{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;max-width:310px;margin-bottom:34px}
+.qbtn{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:3px;
+  padding:8px 13px;font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:12px;
+  letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.38);cursor:pointer;transition:all .15s}
+.qbtn:active{border-color:rgba(0,212,255,.28);color:var(--cyan);background:rgba(0,212,255,.05)}
+.i-start{width:100%;max-width:310px;background:transparent;
+  border:1px solid rgba(0,212,255,.32);border-radius:4px;padding:17px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:14px;
+  letter-spacing:.38em;text-transform:uppercase;color:var(--cyan);
+  cursor:pointer;transition:all .2s;text-shadow:0 0 20px rgba(0,212,255,.42)}
+.i-start:active{background:rgba(0,212,255,.08)}
+
+/* Aviso câmera dentro do intro */
+.cam-notice{font-family:'Barlow',sans-serif;font-weight:200;font-size:11px;
+  letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.2);
+  text-align:center;margin-bottom:28px;padding:0 30px}
+
+/* ── CHEGOU ── */
+#screen-chegou{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.88);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:13px;
+  backdrop-filter:blur(12px)}
+.ch-sym{font-size:50px;animation:pop .4s cubic-bezier(.36,.07,.19,.97)}
+@keyframes pop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+.ch-title{font-family:'Barlow Condensed',sans-serif;font-weight:200;font-size:36px;
+  letter-spacing:.18em;text-transform:uppercase;color:#fff}
+.ch-sub{font-family:'Barlow',sans-serif;font-weight:200;font-size:12px;
+  letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.28);
+  text-align:center;padding:0 38px}
+.ch-btn{margin-top:18px;background:transparent;border:1px solid rgba(255,255,255,.12);
+  border-radius:4px;padding:14px 28px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:13px;
+  letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.35);cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- CÂMERA REAL -->
+<video id="camera-video" autoplay playsinline muted></video>
+
+<!-- Fallback se sem câmera -->
+<div id="camera-fallback">
+  <div class="fb-icon">📷</div>
+  <p>Câmera não disponível<br>Permita o acesso nas configurações do browser</p>
+</div>
+
+<div id="grain"></div>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+
+  <div class="hud-top">
+    <div class="hud-logo"><b>H9J</b> · Navegação</div>
+    <div class="hud-wifi"><div class="wifi-dot"></div><span>Wi-Fi</span></div>
+  </div>
+
+  <div class="hud-dest">
+    <div class="dest-chip">
+      <div class="dest-dot"></div>
+      <span class="dest-txt" id="dest-name">—</span>
+    </div>
+  </div>
+
+  <div class="ar-wrap" id="ar-wrap">
+    <svg class="ar-svg" id="ar-svg" width="74" height="84" viewBox="0 0 74 84" fill="none">
+      <defs>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <path id="ap"
+        d="M37 4 L66 34 L50 34 L50 80 L24 80 L24 34 L8 34 Z"
+        fill="rgba(0,212,255,.13)" stroke="#00d4ff" stroke-width="1.4"
+        filter="url(#glow)"/>
+    </svg>
+    <div class="ar-stem"></div>
+    <div class="ar-dot"></div>
+  </div>
+
+  <div class="ar-ring"></div>
+
+  <div class="ar-dist">
+    <div class="dist-big" id="dist-num">—</div>
+    <div class="dist-dir" id="dist-dir">Em frente</div>
+  </div>
+
+  <div class="panel-l">
+    <div class="p-label">Agora</div>
+    <div class="p-bignum" id="pl-n">01</div>
+    <div class="p-txt" id="pl-t">—</div>
+  </div>
+
+  <div class="panel-r">
+    <div class="p-nlabel">A seguir</div>
+    <span class="p-nico" id="pr-i">—</span>
+    <div class="p-ntxt" id="pr-t">—</div>
+  </div>
+
+  <div class="hud-bottom">
+    <div class="divider"><div class="div-line"></div><div class="div-dot"></div><div class="div-line"></div></div>
+    <div class="hud-instr" id="hud-instr">—</div>
+    <div class="hud-detail" id="hud-detail">—</div>
+    <div class="btn-row">
+      <button class="btn-next" id="btn-next" onclick="avancar()">Próximo passo</button>
+      <button class="btn-emerg">🚨</button>
+    </div>
+  </div>
+</div>
+
+<div class="flash" id="flash"></div>
+
+<!-- INTRO -->
+<div id="screen-intro">
+  <div class="i-logo"><b>H9J</b> · Hospital Nove de Julho</div>
+  <div class="i-line"></div>
+  <div class="i-title">Para onde<br>você vai?</div>
+  <div class="i-sub">Navegação por realidade aumentada</div>
+  <input class="i-input" id="intro-input" type="text" placeholder="Ex: Quarto C571, UTI..."
+    onkeydown="if(event.key==='Enter')iniciar()">
+  <div class="i-quick">
+    <button class="qbtn" onclick="setD('Quarto C571','Bloco C · 5º andar')">C571</button>
+    <button class="qbtn" onclick="setD('Recepção Central','Bloco D · Mezanino')">Recepção</button>
+    <button class="qbtn" onclick="setD('UTI','Bloco B · 3º andar')">UTI</button>
+    <button class="qbtn" onclick="setD('Pronto-socorro','Bloco C · Térreo')">Pronto-sox</button>
+    <button class="qbtn" onclick="setD('Farmácia','Bloco C · Subsolos')">Farmácia</button>
+    <button class="qbtn" onclick="setD('Oncologia','Bloco D · 6º andar')">Oncologia</button>
+  </div>
+  <div class="cam-notice">O app vai solicitar acesso à câmera do seu celular</div>
+  <button class="i-start" onclick="iniciar()">Iniciar navegação</button>
+</div>
+
+<!-- CHEGOU -->
+<div id="screen-chegou">
+  <div class="ch-sym">✦</div>
+  <div class="ch-title">Você chegou</div>
+  <div class="ch-sub" id="ch-sub">—</div>
+  <button class="ch-btn" onclick="reiniciar()">Nova navegação</button>
+</div>
+
+<script>
+// ═══════════════════════
+// CÂMERA
+// ═══════════════════════
+async function iniciarCamera() {
+  const video = document.getElementById('camera-video');
+  const fallback = document.getElementById('camera-fallback');
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: 'environment' }, // câmera traseira
+        width:  { ideal: 1280 },
+        height: { ideal: 720 }
+      },
+      audio: false
+    });
+    video.srcObject = stream;
+    video.style.display = 'block';
+    fallback.style.display = 'none';
+  } catch(e) {
+    // Sem permissão ou sem câmera — mostra fallback escuro
+    video.style.display = 'none';
+    fallback.style.display = 'flex';
+    console.warn('Câmera não disponível:', e.message);
+  }
+}
+
+// ═══════════════════════
+// PASSOS
+// ═══════════════════════
+let dNome='', dSub='';
+let passos=[], pAtual=0;
+
+function gerarPassos(nome, sub) {
+  const m = nome.toUpperCase().replace(/\s/g,'').match(/([ABCD])(\d{3,4})/);
+  const bloco = m ? m[1]
+    : (sub.match(/Bloco ([ABCD])/) || [])[1] || 'C';
+  const andar = (sub.match(/(\d+)º/) || [])[1];
+  const ps = [];
+
+  ps.push({ dir:'frente',   dist:30, ico:'🚶', s:'Siga em frente pelo corredor',       d:'Entrada Peixoto Gomide 545 — Bloco A' });
+  if (['B','C','D'].includes(bloco))
+    ps.push({ dir:'direita',  dist:15, ico:'↩️', s:'Vire à direita — corredor amarelo',  d:'Interligação Bloco A → Bloco B' });
+  if (['C','D'].includes(bloco))
+    ps.push({ dir:'frente',   dist:20, ico:'🚶', s:'Siga pelo corredor interno',         d:'Interligação Bloco B → Bloco C' });
+  if (bloco === 'D')
+    ps.push({ dir:'direita',  dist:12, ico:'↩️', s:'Vire à direita para o Bloco D',      d:'Interligação Bloco C → Bloco D' });
+  if (andar && parseInt(andar) > 0) {
+    ps.push({ dir:'elevador', dist:8,  ico:'🛗', s:'Use o elevador à sua frente',        d:`Pressione o ${andar}º andar` });
+    ps.push({ dir:'frente',   dist:15, ico:'🚶', s:'Saia do elevador e siga as placas',  d:`${andar}º andar — Bloco ${bloco}` });
+  }
+  ps.push({ dir:'chegada',  dist:0,  ico:'✦',  s:'Você chegou ao destino',              d:nome });
+  return ps;
+}
+
+// ═══════════════════════
+// SETA AR
+// ═══════════════════════
+function atualizarSeta(dir) {
+  const svg = document.getElementById('ar-svg');
+  const p   = document.getElementById('ap');
+  const rot = { frente:0, direita:90, esquerda:-90, elevador:0, chegada:0 }[dir] || 0;
+  svg.style.transform  = `rotate(${rot}deg)`;
+  svg.style.transition = 'transform .85s cubic-bezier(.4,0,.2,1)';
+
+  if (dir === 'chegada') {
+    p.setAttribute('d','M14 42 L28 58 L60 26');
+    p.setAttribute('stroke','#4ade80'); p.setAttribute('stroke-width','3');
+    p.setAttribute('stroke-linecap','round'); p.setAttribute('fill','rgba(74,222,128,.12)');
+  } else if (dir === 'elevador') {
+    p.setAttribute('d','M37 5 L56 25 L46 25 L46 48 L28 48 L28 25 L18 25 Z M37 52 L56 72 L46 72 L46 80 L28 80 L28 72 L18 72 Z');
+    p.setAttribute('stroke','#00d4ff'); p.setAttribute('stroke-width','1.4');
+    p.setAttribute('stroke-linecap','butt');  p.setAttribute('fill','rgba(0,212,255,.1)');
+  } else {
+    p.setAttribute('d','M37 4 L66 34 L50 34 L50 80 L24 80 L24 34 L8 34 Z');
+    p.setAttribute('stroke','#00d4ff'); p.setAttribute('stroke-width','1.4');
+    p.setAttribute('stroke-linecap','butt');  p.setAttribute('fill','rgba(0,212,255,.13)');
+  }
+}
+
+// ═══════════════════════
+// UI
+// ═══════════════════════
+function atualizarUI() {
+  const p    = passos[pAtual];
+  const prox = passos[pAtual + 1];
+  const ultimo = pAtual >= passos.length - 1;
+  const pct  = passos.length <= 1 ? 100
+             : Math.round((pAtual / (passos.length - 1)) * 100);
+
+  // Distância
+  const dn = document.getElementById('dist-num');
+  dn.innerHTML = p.dist > 0
+    ? `${p.dist}<span class="dist-unit"> m</span>`
+    : `<span style="font-size:.42em;letter-spacing:.08em">CHEGOU</span>`;
+
+  const dirs = { frente:'Em frente', direita:'Vire à direita', esquerda:'Vire à esquerda', elevador:'Use o elevador', chegada:'Destino' };
+  document.getElementById('dist-dir').textContent  = dirs[p.dir] || 'Em frente';
+  document.getElementById('hud-instr').textContent = p.s;
+  document.getElementById('hud-detail').textContent = p.d;
+  document.getElementById('pl-n').textContent = String(pAtual + 1).padStart(2, '0');
+  document.getElementById('pl-t').textContent = p.s;
+
+  if (prox) {
+    document.getElementById('pr-i').textContent = prox.ico;
+    document.getElementById('pr-t').textContent = prox.s;
+  } else {
+    document.getElementById('pr-i').textContent = '✦';
+    document.getElementById('pr-t').textContent = 'Destino';
+  }
+
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('ar-wrap').style.opacity  = p.dir === 'chegada' ? '0.3' : '1';
+
+  atualizarSeta(p.dir);
+
+  const btn = document.getElementById('btn-next');
+  if (ultimo) {
+    btn.textContent = 'Confirmar chegada';
+    btn.className   = 'btn-next chegada';
+    btn.onclick     = confirmarChegada;
+  } else {
+    btn.textContent = 'Próximo passo';
+    btn.className   = 'btn-next';
+    btn.onclick     = avancar;
+  }
+}
+
+function avancar() {
+  if (pAtual >= passos.length - 1) { confirmarChegada(); return; }
+  const fl = document.getElementById('flash');
+  fl.classList.add('on');
+  setTimeout(() => fl.classList.remove('on'), 160);
+  pAtual++;
+  atualizarUI();
+}
+
+function confirmarChegada() {
+  document.getElementById('ch-sub').textContent = dNome + ' · ' + dSub;
+  document.getElementById('screen-chegou').style.display = 'flex';
+}
+
+function setD(nome, sub) {
+  dNome = nome; dSub = sub;
+  document.getElementById('intro-input').value = nome;
+}
+
+function iniciar() {
+  const val = document.getElementById('intro-input').value.trim();
+  if (val && !dNome) dNome = val;
+  if (!dNome) dNome = 'Destino';
+
+  // Interpreta código de quarto
+  const m = dNome.toUpperCase().replace(/\s/g,'').match(/([ABCD])(\d{3,4})/);
+  if (m) {
+    const an = Math.floor(parseInt(m[2]) / 100);
+    dSub     = `Bloco ${m[1]} · ${an}º andar`;
+    dNome    = `Quarto ${m[1]}${m[2]}`;
+  }
+
+  document.getElementById('dest-name').textContent = dNome.toUpperCase();
+  passos  = gerarPassos(dNome, dSub || '');
+  pAtual  = 0;
+  atualizarUI();
+
+  // Inicia câmera
+  iniciarCamera();
+
+  // Fade out intro
+  const intro = document.getElementById('screen-intro');
+  intro.style.opacity = '0';
+  setTimeout(() => intro.style.display = 'none', 560);
+}
+
+function reiniciar() {
+  dNome = ''; dSub = '';
+  document.getElementById('intro-input').value = '';
+  document.getElementById('screen-chegou').style.display = 'none';
+
+  // Para câmera
+  const video = document.getElementById('camera-video');
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach(t => t.stop());
+    video.srcObject = null;
+  }
+
+  const intro = document.getElementById('screen-intro');
+  intro.style.display = 'flex';
+  intro.style.opacity = '0';
+  setTimeout(() => { intro.style.opacity = '1'; intro.style.transition = 'opacity .4s'; }, 10);
+}
+</script>
+</body>
+</html>
