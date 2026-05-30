@@ -55,9 +55,32 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Ba
 #scanlines{position:fixed;inset:0;z-index:2;pointer-events:none;
   background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.045) 3px,rgba(0,0,0,.045) 4px)}
 
-/* Vinheta */
+/* Vinheta lateral suave */
 #vignette{position:fixed;inset:0;z-index:3;pointer-events:none;
-  background:radial-gradient(ellipse at 50% 45%,transparent 35%,rgba(0,0,0,.65) 100%)}
+  background:radial-gradient(ellipse at 50% 42%,transparent 28%,rgba(0,0,0,.45) 100%)}
+
+/* Degradê inferior — legibilidade do rodapé */
+#overlay-bottom{
+  position:fixed;bottom:0;left:0;right:0;height:55%;
+  z-index:4;pointer-events:none;
+  background:linear-gradient(to bottom,
+    transparent 0%,
+    rgba(0,0,0,.15) 25%,
+    rgba(0,0,0,.60) 60%,
+    rgba(0,0,0,.88) 100%
+  );
+}
+
+/* Degradê superior — legibilidade do topo */
+#overlay-top{
+  position:fixed;top:0;left:0;right:0;height:24%;
+  z-index:4;pointer-events:none;
+  background:linear-gradient(to top,
+    transparent 0%,
+    rgba(0,0,0,.22) 40%,
+    rgba(0,0,0,.62) 100%
+  );
+}
 
 /* ── HUD ── */
 #hud{position:fixed;inset:0;z-index:10;pointer-events:none}
@@ -80,7 +103,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Ba
 .hud-dest{position:absolute;top:max(env(safe-area-inset-top),14px);left:0;right:0;
   display:flex;justify-content:center;padding-top:36px}
 .dest-chip{display:flex;align-items:center;gap:8px;
-  background:rgba(0,0,0,.52);border:1px solid rgba(0,212,255,.22);
+  background:rgba(0,0,0,.68);border:1px solid rgba(0,212,255,.28);
   border-radius:30px;padding:7px 16px 7px 11px;backdrop-filter:blur(12px)}
 .dest-dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);flex-shrink:0}
 .dest-txt{font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.8)}
@@ -107,18 +130,18 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Ba
 .ar-dist{position:absolute;top:21%;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none}
 .dist-big{font-family:'Barlow Condensed',sans-serif;font-weight:200;
   font-size:clamp(50px,13vw,82px);letter-spacing:.04em;color:#fff;line-height:1;
-  text-shadow:0 0 40px rgba(0,212,255,.55)}
+  text-shadow:0 0 40px rgba(0,212,255,.55),0 2px 12px rgba(0,0,0,.9)}
 .dist-unit{font-size:.3em;font-weight:300;opacity:.42;letter-spacing:.22em;text-transform:uppercase}
 .dist-dir{font-family:'Barlow Condensed',sans-serif;font-weight:300;
   font-size:clamp(13px,3.5vw,17px);letter-spacing:.26em;text-transform:uppercase;
   color:var(--cyan);margin-top:5px;opacity:.88}
 
 /* Painéis laterais */
-.panel-l{position:absolute;left:0;top:50%;transform:translateY(-50%);padding:0 0 0 15px;max-width:148px}
+.panel-l{position:absolute;left:0;top:50%;transform:translateY(-50%);padding:10px 12px 10px 15px;max-width:152px;background:linear-gradient(to right,rgba(0,0,0,.45),transparent);border-radius:0 8px 8px 0}
 .p-label{font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:10px;letter-spacing:.32em;text-transform:uppercase;color:var(--cyan);margin-bottom:5px;opacity:.7}
 .p-bignum{font-family:'Barlow Condensed',sans-serif;font-weight:200;font-size:38px;line-height:1;color:rgba(255,255,255,.1);letter-spacing:-.02em;margin-bottom:-3px}
 .p-txt{font-family:'Barlow',sans-serif;font-weight:300;font-size:11.5px;line-height:1.55;color:rgba(255,255,255,.58)}
-.panel-r{position:absolute;right:0;top:50%;transform:translateY(-50%);padding:0 15px 0 0;max-width:148px;text-align:right}
+.panel-r{position:absolute;right:0;top:50%;transform:translateY(-50%);padding:10px 15px 10px 12px;max-width:152px;text-align:right;background:linear-gradient(to left,rgba(0,0,0,.45),transparent);border-radius:8px 0 0 8px}
 .p-nlabel{font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:4px}
 .p-nico{font-size:20px;display:block;margin-bottom:3px;opacity:.36}
 .p-ntxt{font-family:'Barlow',sans-serif;font-weight:300;font-size:11.5px;line-height:1.5;color:rgba(255,255,255,.24)}
@@ -223,6 +246,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Ba
 <div id="grain"></div>
 <div id="scanlines"></div>
 <div id="vignette"></div>
+<div id="overlay-bottom"></div>
+<div id="overlay-top"></div>
 
 <!-- HUD -->
 <div id="hud">
