@@ -59,26 +59,49 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Ba
 #vignette{position:fixed;inset:0;z-index:3;pointer-events:none;
   background:radial-gradient(ellipse at 50% 42%,transparent 28%,rgba(0,0,0,.45) 100%)}
 
-/* Degradê inferior — legibilidade do rodapé */
+/* Degradê inferior — mais forte */
 #overlay-bottom{
-  position:fixed;bottom:0;left:0;right:0;height:55%;
+  position:fixed;bottom:0;left:0;right:0;height:58%;
   z-index:4;pointer-events:none;
   background:linear-gradient(to bottom,
     transparent 0%,
-    rgba(0,0,0,.15) 25%,
-    rgba(0,0,0,.60) 60%,
-    rgba(0,0,0,.88) 100%
+    rgba(0,0,0,.08) 20%,
+    rgba(0,0,0,.55) 52%,
+    rgba(0,0,0,.92) 78%,
+    rgba(0,0,0,.97) 100%
   );
 }
 
-/* Degradê superior — legibilidade do topo */
+/* Degradê superior — mais forte */
 #overlay-top{
-  position:fixed;top:0;left:0;right:0;height:24%;
+  position:fixed;top:0;left:0;right:0;height:28%;
   z-index:4;pointer-events:none;
   background:linear-gradient(to top,
     transparent 0%,
-    rgba(0,0,0,.22) 40%,
-    rgba(0,0,0,.62) 100%
+    rgba(0,0,0,.30) 45%,
+    rgba(0,0,0,.75) 100%
+  );
+}
+
+/* Degradê lateral esquerdo — drop shadow orgânico */
+#overlay-left{
+  position:fixed;top:30%;left:0;width:180px;height:40%;
+  z-index:4;pointer-events:none;
+  background:radial-gradient(ellipse at 0% 50%,
+    rgba(0,0,0,.65) 0%,
+    rgba(0,0,0,.3) 50%,
+    transparent 100%
+  );
+}
+
+/* Degradê lateral direito — drop shadow orgânico */
+#overlay-right{
+  position:fixed;top:30%;right:0;width:180px;height:40%;
+  z-index:4;pointer-events:none;
+  background:radial-gradient(ellipse at 100% 50%,
+    rgba(0,0,0,.65) 0%,
+    rgba(0,0,0,.3) 50%,
+    transparent 100%
   );
 }
 
@@ -93,9 +116,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Ba
 .hud-top{position:absolute;top:0;left:0;right:0;
   padding:max(env(safe-area-inset-top),16px) 18px 0;
   display:flex;align-items:center;justify-content:space-between}
-.hud-logo{font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:12px;letter-spacing:.4em;text-transform:uppercase;color:rgba(255,255,255,.38)}
+.hud-logo{font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:12px;letter-spacing:.4em;text-transform:uppercase;color:rgba(255,255,255,.75);text-shadow:0 1px 8px rgba(0,0,0,1)}
 .hud-logo b{color:var(--cyan);font-weight:400}
-.hud-wifi{display:flex;align-items:center;gap:6px;font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.32)}
+.hud-wifi{display:flex;align-items:center;gap:6px;font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.75);text-shadow:0 1px 8px rgba(0,0,0,1)}
 .wifi-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
@@ -137,14 +160,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Ba
   color:var(--cyan);margin-top:5px;opacity:.88}
 
 /* Painéis laterais */
-.panel-l{position:absolute;left:0;top:50%;transform:translateY(-50%);padding:10px 12px 10px 15px;max-width:152px;background:linear-gradient(to right,rgba(0,0,0,.45),transparent);border-radius:0 8px 8px 0}
-.p-label{font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:10px;letter-spacing:.32em;text-transform:uppercase;color:var(--cyan);margin-bottom:5px;opacity:.7}
-.p-bignum{font-family:'Barlow Condensed',sans-serif;font-weight:200;font-size:38px;line-height:1;color:rgba(255,255,255,.1);letter-spacing:-.02em;margin-bottom:-3px}
-.p-txt{font-family:'Barlow',sans-serif;font-weight:300;font-size:11.5px;line-height:1.55;color:rgba(255,255,255,.58)}
-.panel-r{position:absolute;right:0;top:50%;transform:translateY(-50%);padding:10px 15px 10px 12px;max-width:152px;text-align:right;background:linear-gradient(to left,rgba(0,0,0,.45),transparent);border-radius:8px 0 0 8px}
-.p-nlabel{font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:4px}
-.p-nico{font-size:20px;display:block;margin-bottom:3px;opacity:.36}
-.p-ntxt{font-family:'Barlow',sans-serif;font-weight:300;font-size:11.5px;line-height:1.5;color:rgba(255,255,255,.24)}
+.panel-l{position:absolute;left:0;top:50%;transform:translateY(-50%);padding:10px 12px 10px 15px;max-width:152px}
+.p-label{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:.32em;text-transform:uppercase;color:var(--cyan);margin-bottom:5px;opacity:1}
+.p-bignum{font-family:'Barlow Condensed',sans-serif;font-weight:200;font-size:38px;line-height:1;color:rgba(255,255,255,.9);letter-spacing:-.02em;margin-bottom:-3px;text-shadow:0 2px 12px rgba(0,0,0,1),0 0 24px rgba(0,0,0,1)}
+.p-txt{font-family:'Barlow',sans-serif;font-weight:300;font-size:11.5px;line-height:1.55;color:rgba(255,255,255,.92);text-shadow:0 1px 8px rgba(0,0,0,1),0 2px 16px rgba(0,0,0,1)}
+.panel-r{position:absolute;right:0;top:50%;transform:translateY(-50%);padding:10px 15px 10px 12px;max-width:152px;text-align:right}
+.p-nlabel{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);margin-bottom:4px;opacity:1}
+.p-nico{font-size:20px;display:block;margin-bottom:3px;opacity:1;filter:drop-shadow(0 1px 6px rgba(0,0,0,1))}
+.p-ntxt{font-family:'Barlow',sans-serif;font-weight:300;font-size:11.5px;line-height:1.5;color:rgba(255,255,255,.92);text-shadow:0 1px 8px rgba(0,0,0,1),0 2px 16px rgba(0,0,0,1)}
 
 /* Rodapé */
 .hud-bottom{position:absolute;bottom:0;left:0;right:0;
@@ -155,11 +178,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Ba
 .div-dot{width:4px;height:4px;border-radius:50%;background:#fff;flex-shrink:0}
 .hud-instr{font-family:'Barlow Condensed',sans-serif;font-weight:300;
   font-size:clamp(15px,4.2vw,21px);letter-spacing:.2em;text-transform:uppercase;
-  color:rgba(255,255,255,.88);text-align:center;padding:0 20px;
-  text-shadow:0 0 20px rgba(0,212,255,.3)}
+  color:rgba(255,255,255,.96);text-align:center;padding:0 20px;
+  text-shadow:0 0 20px rgba(0,212,255,.4),0 2px 10px rgba(0,0,0,1),0 4px 20px rgba(0,0,0,1)}
 .hud-detail{font-family:'Barlow',sans-serif;font-weight:200;font-size:11px;
-  letter-spacing:.17em;text-transform:uppercase;color:rgba(255,255,255,.26);
-  text-align:center;padding:0 28px;margin-top:-5px}
+  letter-spacing:.17em;text-transform:uppercase;color:rgba(255,255,255,.72);
+  text-align:center;padding:0 28px;margin-top:-5px;text-shadow:0 1px 8px rgba(0,0,0,1)}
 .btn-row{display:flex;gap:10px;padding:0 18px;width:100%}
 .btn-next{flex:1;background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.3);
   border-radius:4px;padding:16px 18px;
@@ -248,6 +271,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Ba
 <div id="vignette"></div>
 <div id="overlay-bottom"></div>
 <div id="overlay-top"></div>
+<div id="overlay-left"></div>
+<div id="overlay-right"></div>
 
 <!-- HUD -->
 <div id="hud">
